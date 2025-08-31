@@ -1,0 +1,50 @@
+Node modules
+node_modules/
+/sparrc-app-final/node_modules
+/sparrc-backend/node_modules
+
+Expo files
+.expo/
+npm-debug.log
+yarn-error.log
+
+VSCode settings
+.vscode/
+
+Build folders
+/android
+/ios
+
+Environment variables
+.env
+
+
+#### Step 2: Fix the Embedded Repository
+
+Now, let's remove the extra, hidden `.git` folder from your frontend project.
+
+1.  Open your command prompt.
+2.  Navigate **inside** your frontend folder:
+    ```bash
+    cd sparrc-app-final
+    ```
+3.  Run the following command to safely remove the hidden Git folder. **This will not delete any of your code.**
+    ```bash
+    rmdir /s /q .git
+    ```
+
+#### Step 3: Reset and Re-add Everything
+
+Now that we've fixed the problems, we need to tell Git to 'forget' what it just tried to add and start over correctly.
+
+1.  Navigate back to your main project folder:
+    ```bash
+    cd ..
+    ```
+2.  Reset the previous `git add` command:
+    ```bash
+    git reset
+    ```
+3.  Now, add everything again. This time, it will work correctly!
+    ```bash
+    git add .

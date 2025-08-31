@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "sparrc-app-final",
+    "slug": "sparrc-app-final",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/spaarc-logo.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/spaarc-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#4C1D95"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/spaarc-logo.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.anonymous.sparrcappfinal"
+    },
+    "web": {
+      "favicon": "./assets/spaarc-logo.png"
+    },
+    "main": "App.js"
+  }
+}

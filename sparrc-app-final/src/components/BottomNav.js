@@ -12,7 +12,7 @@ const BottomNav = ({ activeTab, onTabChange }) => {
   return (
     <View style={styles.bottomNav}>
       <NavButton icon={BarChart3} label="Dashboard" isActive={activeTab === 'dashboard'} onPress={() => onTabChange('dashboard')} />
-      <NavButton icon={MessageCircle} label="AI Coach" isActive={activeTab === 'chatbot'} onPress={() => onTabChange('chatbot')} />
+      <NavButton icon={MessageCircle} label="SPARRC AI" isActive={activeTab === 'chatbot'} onPress={() => onTabChange('chatbot')} />
       <NavButton icon={Calendar} label="Appointments" isActive={activeTab === 'appointments'} onPress={() => onTabChange('appointments')} />
       <NavButton icon={FileText} label="Reports" isActive={activeTab === 'reports'} onPress={() => onTabChange('reports')} />
     </View>
@@ -27,3 +27,4 @@ const styles = StyleSheet.create({
 });
 
 export default BottomNav;
+

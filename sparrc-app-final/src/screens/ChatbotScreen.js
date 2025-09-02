@@ -50,13 +50,11 @@ const ChatbotScreen = ({ conversations = [] }) => {
             <KeyboardAvoidingView
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 style={styles.keyboardAvoidingContainer}
-                keyboardVerticalOffset={90} // Adjust this based on your header height
+                keyboardVerticalOffset={90}
             >
-                {/* This inner container correctly uses flexbox to position its children */}
                 <View style={styles.innerContainer}>
                     <Text style={styles.screenTitle}>SPARRC AI</Text>
                     
-                    {/* The FlatList will now correctly take up all available vertical space */}
                     <FlatList
                         ref={flatListRef}
                         data={messages}
@@ -67,7 +65,6 @@ const ChatbotScreen = ({ conversations = [] }) => {
                         onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
                     />
                     
-                    {/* The input container is the last child, ensuring it sticks to the bottom */}
                     <View style={styles.inputContainer}>
                         <TextInput
                             style={styles.textInput}
@@ -86,6 +83,7 @@ const ChatbotScreen = ({ conversations = [] }) => {
     );
 };
 
+// --- MODIFIED: Chat bubble colors have been updated ---
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
@@ -106,7 +104,7 @@ const styles = StyleSheet.create({
         color: '#111827',
     },
     chatArea: {
-        flex: 1, // This makes the FlatList expand to fill the available space
+        flex: 1,
     },
     chatListContainer: {
         paddingBottom: 10,
@@ -119,26 +117,26 @@ const styles = StyleSheet.create({
         maxWidth: '80%',
     },
     botMessageContainer: {
-        backgroundColor: '#E5E7EB',
+        backgroundColor: '#4C1D95', // Dark Purple for the AI
         alignSelf: 'flex-start',
     },
     userMessageContainer: {
-        backgroundColor: '#6D28D9',
+        backgroundColor: '#EDE9FE', // Light Purple for the User
         alignSelf: 'flex-end',
     },
     botMessageText: {
         fontSize: 15,
-        color: '#1F2937',
+        color: '#FFFFFF', // White text on dark purple
     },
     userMessageText: {
         fontSize: 15,
-        color: '#FFFFFF',
+        color: '#1F2937', // Dark text on light purple
     },
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingTop: 10,
-        paddingBottom: 10, // Added padding for the bottom
+        paddingBottom: 10,
         borderTopWidth: 1,
         borderTopColor: '#E5E7EB',
         backgroundColor: '#F9FAFB',

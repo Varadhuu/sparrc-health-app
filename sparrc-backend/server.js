@@ -6,16 +6,16 @@ const app = express();
 const port = 3001;
 
 app.use(cors());
-app.use(express.json()); // Middleware to parse JSON bodies
+app.use(express.json());
 
 const dbConfig = {
     host: 'localhost',
     user: 'root',
-    password: 'YourNewPassword', // IMPORTANT: Use your actual MySQL password here
+    password: 'root123', // IMPORTANT: Use your actual MySQL password
     database: 'sparrc'
 };
 
-// GET endpoint for patient data
+// GET endpoint for the new detailed patient data
 app.get('/api/patient/:id', async (req, res) => {
     try {
         const connection = await mysql.createConnection(dbConfig);
@@ -35,7 +35,7 @@ app.get('/api/patient/:id', async (req, res) => {
         }
 
         const [appointments] = await connection.execute(
-            `SELECT a.id, a.reason, a.appointment_date, a.status, d.doctor_name 
+            `SELECT a.*, d.doctor_name 
              FROM sparrc_appointments a
              JOIN sparrc_doctor_info d ON a.doctor_id = d.doctor_id
              WHERE a.patient_id = ? 
@@ -44,28 +44,24 @@ app.get('/api/patient/:id', async (req, res) => {
         );
 
         await connection.end();
-
-        const patientData = {
+        
+        res.json({
             ...patientRows[0],
             appointments: appointments,
-            chatbot_conversations: [
-                { id: 1, message: "Hello! How can I help with your recovery today?", sender: "bot" }
-            ]
-        };
-        
-        res.json(patientData);
-
+            chatbot_conversations: [{ id: 1, message: "Hello! How can I help with your recovery today?", sender: "bot" }]
+        });
     } catch (error) {
         console.error('Database query failed:', error);
         res.status(500).json({ message: 'Error fetching patient data' });
     }
 });
 
-// --- NEW: PUT endpoint to update patient data ---
+// PUT endpoint to update the new detailed patient data
 app.put('/api/patient/:id', async (req, res) => {
     try {
         const patientId = req.params.id;
-        const { patient_name, email, mobile_number, gender, occupation } = req.body;
+        // Now includes address
+        const { patient_name, email, mobile_number, gender, occupation, address } = req.body;
 
         if (!patient_name || !mobile_number) {
             return res.status(400).json({ message: 'Patient name and mobile number are required.' });
@@ -75,14 +71,13 @@ app.put('/api/patient/:id', async (req, res) => {
 
         await connection.execute(
             `UPDATE sparrc_patient_info 
-             SET patient_name = ?, email = ?, mobile_number = ?, gender = ?, occupation = ?
+             SET patient_name = ?, email = ?, mobile_number = ?, gender = ?, occupation = ?, address = ?
              WHERE id = ?`,
-            [patient_name, email, mobile_number, gender, occupation, patientId]
+            [patient_name, email, mobile_number, gender, occupation, address, patientId]
         );
 
         await connection.end();
         res.status(200).json({ message: 'Profile updated successfully' });
-
     } catch (error) {
         console.error('Failed to update profile:', error);
         res.status(500).json({ message: 'Error updating profile' });
@@ -93,23 +88,23 @@ app.put('/api/patient/:id', async (req, res) => {
 // POST endpoint for appointments
 app.post('/api/appointments', async (req, res) => {
     try {
-        const { patientId, doctorId, reason, date } = req.body;
+        const { patientId, doctorId, reason, date, consultationType, branch } = req.body;
         
-        if (!patientId || !doctorId || !reason || !date) {
+        if (!patientId || !doctorId || !reason || !date || !consultationType || !branch) {
             return res.status(400).json({ message: 'Missing required appointment data.' });
         }
 
         const connection = await mysql.createConnection(dbConfig);
         const formattedDate = new Date(date).toISOString().slice(0, 19).replace('T', ' ');
+        const initialStatus = 'Waiting for Confirmation';
 
         const [result] = await connection.execute(
-            'INSERT INTO sparrc_appointments (patient_id, doctor_id, reason, appointment_date, status) VALUES (?, ?, ?, ?, ?)',
-            [patientId, doctorId, reason, formattedDate, 'pending']
+            'INSERT INTO sparrc_appointments (patient_id, doctor_id, reason, appointment_date, status, consultation_type, branch) VALUES (?, ?, ?, ?, ?, ?, ?)',
+            [patientId, doctorId, reason, formattedDate, initialStatus, consultationType, branch]
         );
         
         await connection.end();
         res.status(201).json({ message: 'Appointment created successfully', appointmentId: result.insertId });
-
     } catch (error) {
         console.error('Failed to create appointment:', error);
         res.status(500).json({ message: 'Error creating appointment' });

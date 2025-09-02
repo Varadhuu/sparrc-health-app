@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Award, Calendar, Plus, FileText } from 'lucide-react-native'; // Replaced Dumbbell with Calendar
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { Award, Calendar, Plus, FileText, Lightbulb } from 'lucide-react-native';
 
 // Helper function to format the date and time
 const formatDateTime = (isoString) => {
@@ -24,23 +24,21 @@ const StatCard = ({ icon: Icon, value, label, color }) => (
 );
 
 const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
-    if (!patient) {
+    if (!patient || !patient.appointments) {
         return <View style={styles.screenContainer}><Text>Loading patient data...</Text></View>;
     }
 
-    // Find the next upcoming appointment from the list
-    const nextAppointment = patient.appointments && patient.appointments.length > 0 
-        ? patient.appointments[0] 
-        : null;
+    // Find the soonest upcoming appointment
+    const nextAppointment = patient.appointments
+        .filter(a => new Date(a.appointment_date) >= new Date())
+        .sort((a, b) => new Date(a.appointment_date) - new Date(b.appointment_date))[0];
 
     return (
-        <View style={styles.screenContainer}>
+        <ScrollView contentContainerStyle={styles.screenContainer}>
             <Text style={styles.welcomeTitle}>Welcome, {patient.patient_name || 'User'}!</Text>
             
             <View style={styles.card}>
                 <Text style={styles.cardTitle}>Next Appointment</Text>
-                {/* --- THIS IS THE FIX --- */}
-                {/* Now using the correct properties: 'appointment_date' and 'doctor_name' */}
                 {nextAppointment ? (
                     <>
                         <Text style={styles.appointmentTime}>{formatDateTime(nextAppointment.appointment_date)}</Text>
@@ -52,8 +50,9 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
             </View>
 
             <View style={styles.statsGrid}>
-                <StatCard icon={Award} value={`${patient.pain_scale}%`} label="Pain Score" color="#10B981" />
-                <StatCard icon={Calendar} value={patient.appointments?.length || 0} label="Appointments" color="#3B82F6" />
+                {/* --- MODIFIED: Color changed from red to green --- */}
+                <StatCard icon={Award} value={`${patient.pain_scale}/10`} label="Pain Score" color="#10B981" />
+                <StatCard icon={Calendar} value={patient.appointments.length} label="Appointments" color="#3B82F6" />
             </View>
 
             <TouchableOpacity style={styles.primaryButton} onPress={onBookAppointment}>
@@ -61,11 +60,17 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
                 <Text style={styles.primaryButtonText}>Book New Appointment</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.primaryButton} onPress={onViewReports}>
+            <TouchableOpacity style={[styles.primaryButton, { marginTop: 10 }]} onPress={onViewReports}>
                 <FileText color="#fff" size={18} style={{ marginRight: 10 }}/>
                 <Text style={styles.primaryButtonText}>View Full Report</Text>
             </TouchableOpacity>
-        </View>
+            
+            <Text style={styles.sectionTitle}>Health Tip of the Day</Text>
+            <View style={styles.tipCard}>
+                <Lightbulb color="#92400E" size={24} style={styles.tipIcon} />
+                <Text style={styles.tipText}>Remember to stay hydrated! Drinking enough water is crucial for muscle recovery and overall joint health.</Text>
+            </View>
+        </ScrollView>
     );
 };
 
@@ -77,7 +82,7 @@ const styles = StyleSheet.create({
     fontSize: 26, 
     fontWeight: 'bold', 
     color: '#111827', 
-    marginBottom: 10 
+    marginBottom: 20
   },
   card: { 
     backgroundColor: '#fff', 
@@ -88,11 +93,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05, 
     shadowRadius: 4, 
     elevation: 3 
-  },
-  cardTitle: { 
-    fontSize: 16, 
-    fontWeight: '600', 
-    color: '#6B7280' 
   },
   appointmentTime: { 
     fontSize: 22, 
@@ -107,14 +107,14 @@ const styles = StyleSheet.create({
   statsGrid: { 
     flexDirection: 'row', 
     justifyContent: 'space-between', 
-    marginTop: 20 
+    marginTop: 20,
   },
   statCard: { 
-    flex: 1, 
+    flex: 1,
     borderRadius: 12, 
     padding: 15, 
     alignItems: 'center', 
-    marginHorizontal: 5 
+    marginHorizontal: 5,
   },
   statValue: { 
     fontSize: 22, 
@@ -133,13 +133,36 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 10,
+    marginTop: 20,
   },
   primaryButtonText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1F2937',
+    marginTop: 25,
+    marginBottom: 10,
+  },
+  tipCard: {
+    backgroundColor: '#FEF3C7',
+    borderRadius: 12,
+    padding: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  tipIcon: {
+    marginRight: 15,
+  },
+  tipText: {
+    color: '#92400E',
+    fontSize: 14,
+    flex: 1,
+    lineHeight: 20,
+  }
 });
 
 export default DashboardScreen;

@@ -1,27 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, Text, Alert, ScrollView, RefreshControl } from 'react-native';
 
 import { fetchPatientData, updatePatientData } from './src/api';
 import Header from './src/components/Header';
 import BottomNav from './src/components/BottomNav';
-import SideMenu from './src/components/SideMenu';
 import SplashScreen from './src/components/SplashScreen';
 import DashboardScreen from './src/screens/DashboardScreen';
 import ChatbotScreen from './src/screens/ChatbotScreen';
 import AppointmentsScreen from './src/screens/AppointmentsScreen';
 import ReportsScreen from './src/screens/ReportsScreen';
 import AddAppointmentModal from './src/components/AddAppointmentModal';
-import ProfileScreen from './src/screens/ProfileScreen'; // Import the new profile screen
+import ProfileScreen from './src/screens/ProfileScreen';
 
 export default function App() {
     const [appStatus, setAppStatus] = useState('loading');
     const [activeTab, setActiveTab] = useState('dashboard');
-    const [showMenu, setShowMenu] = useState(false);
     const [patientData, setPatientData] = useState(null);
     const [isModalVisible, setModalVisible] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
-    
-    // State to control which main view is visible: 'main' or 'profile'
     const [activeScreen, setActiveScreen] = useState('main'); 
     const [isSaving, setIsSaving] = useState(false);
 
@@ -46,14 +42,13 @@ export default function App() {
         }
     }, [appStatus, patientData]);
 
-    // Function to handle saving profile changes
     const handleSaveProfile = async (updatedPatient) => {
         setIsSaving(true);
         try {
             await updatePatientData(updatedPatient);
-            setPatientData(updatedPatient); // Update the local state immediately
+            setPatientData(updatedPatient);
             Alert.alert("Success", "Your profile has been updated.");
-            setActiveScreen('main'); // Navigate back to the main app view
+            setActiveScreen('main');
         } catch (error) {
             Alert.alert("Error", "Could not save your profile. Please try again.");
         } finally {
@@ -71,16 +66,20 @@ export default function App() {
     const renderMainContent = () => {
         if (activeTab === 'dashboard') return <DashboardScreen patient={patientData} onBookAppointment={() => setModalVisible(true)} onViewReports={() => setActiveTab('reports')} />;
         if (activeTab === 'chatbot') return <ChatbotScreen conversations={patientData?.chatbot_conversations} />;
-        if (activeTab === 'appointments') return <AppointmentsScreen appointments={patientData?.appointments} onRefresh={onRefresh} isRefreshing={isRefreshing} />;
+        // --- THIS IS THE CHANGE ---
+        // The AppointmentsScreen now receives the onBookAppointment function
+        if (activeTab === 'appointments') return <AppointmentsScreen appointments={patientData?.appointments} onRefresh={onRefresh} isRefreshing={isRefreshing} onBookAppointment={() => setModalVisible(true)} />;
         if (activeTab === 'reports') return <ReportsScreen patient={patientData} />;
         return null;
     };
 
     const renderMainApp = () => (
         <>
-            <Header onMenuPress={() => setShowMenu(true)} />
+            <Header 
+                patientName={patientData?.patient_name} 
+                onProfilePress={() => setActiveScreen('profile')} 
+            />
             <View style={{ flex: 1 }}>
-                {/* Logic to prevent nesting scrollable components */}
                 {activeTab === 'chatbot' || activeTab === 'appointments' ? (
                     <View style={{ flex: 1, paddingBottom: 80 }}>{renderMainContent()}</View>
                 ) : (
@@ -93,16 +92,7 @@ export default function App() {
                 )}
             </View>
             <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
-            <SideMenu 
-                user={patientData} 
-                isVisible={showMenu} 
-                onClose={() => setShowMenu(false)}
-                // Pass the navigation function to the SideMenu
-                onNavigate={(screen) => {
-                    setActiveScreen(screen);
-                    setShowMenu(false);
-                }}
-            />
+            
             <AddAppointmentModal
                 isVisible={isModalVisible}
                 onClose={() => setModalVisible(false)}
@@ -129,7 +119,6 @@ export default function App() {
     return (
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="dark-content" />
-            {/* Conditionally render the main app or the profile screen */}
             {activeScreen === 'main' ? (
                 renderMainApp()
             ) : (

@@ -219,7 +219,7 @@ const AppointmentCard = ({ nextAppointment, onBookAppointment }) => {
           <View style={styles.appointmentDetails}>
             <View style={styles.appointmentMainInfo}>
               <Text style={styles.appointmentTime}>{formatDateTime(nextAppointment.appointment_date)}</Text>
-              <Text style={styles.appointmentDoctor}>with Dr. {nextAppointment.doctor_name}</Text>
+              <Text style={styles.appointmentDoctor}>with {nextAppointment.doctor_name}</Text>
             </View>
             <View style={styles.appointmentMetaInfo}>
               <View style={styles.appointmentBadge}>
@@ -241,7 +241,6 @@ const AppointmentCard = ({ nextAppointment, onBookAppointment }) => {
   );
 };
 
-
 const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
     if (!patient || !patient.appointments) {
         return <View style={styles.screenContainer}><Text>Loading patient data...</Text></View>;
@@ -251,15 +250,6 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
     const nextAppointment = patient.appointments
         .filter(a => new Date(a.appointment_date) >= new Date())
         .sort((a, b) => new Date(a.appointment_date) - new Date(b.appointment_date))[0];
-
-    // Get pain level color
-    const getPainColor = (painLevel) => {
-        if (painLevel <= 3) return '#10B981'; // Green
-        if (painLevel <= 6) return '#F59E0B'; // Yellow
-        return '#EF4444'; // Red
-    };
-
-    const painColor = getPainColor(patient.pain_scale);
 
     return (
         <ScrollView 
@@ -285,7 +275,7 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
                     icon={Heart} 
                     value={`${patient.pain_scale}/10`} 
                     label="Pain Level" 
-                    color={painColor}
+                    color="#EF4444"
                 />
                 <StatCard 
                     icon={Calendar} 

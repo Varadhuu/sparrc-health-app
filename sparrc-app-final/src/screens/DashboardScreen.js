@@ -173,7 +173,6 @@ const AppointmentCard = ({ nextAppointment, onBookAppointment }) => {
       pulseAnimation.start();
       return () => pulseAnimation.stop();
     }
-    </View>
   }, [nextAppointment]);
 
   const handlePressIn = () => {

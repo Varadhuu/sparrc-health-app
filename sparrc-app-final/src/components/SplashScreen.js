@@ -77,7 +77,7 @@ const SplashScreen = ({ onAnimationFinish }) => {
         // Let the splash screen run for a set time
         const timer = setTimeout(() => {
             onAnimationFinish();
-        }, 2800); // Increased time slightly for a better experience
+        }, 1800); // Reduced splash time for faster loading
 
         // Clean up the animation and timer
         return () => {

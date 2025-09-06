@@ -1,13 +1,15 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { Award, Calendar, Plus, FileText, Lightbulb } from 'lucide-react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import { Award, Calendar, Plus, FileText, Lightbulb, Activity, Heart, TrendingUp, Clock } from 'lucide-react-native';
+
+const { width } = Dimensions.get('window');
 
 // Helper function to format the date and time
 const formatDateTime = (isoString) => {
     if (!isoString) return 'No upcoming appointments.';
     const date = new Date(isoString);
     return date.toLocaleString('en-US', { 
-        month: 'long', 
+        month: 'short', 
         day: 'numeric', 
         hour: 'numeric', 
         minute: '2-digit',
@@ -15,12 +17,28 @@ const formatDateTime = (isoString) => {
     });
 };
 
-const StatCard = ({ icon: Icon, value, label, color }) => (
-  <View style={[styles.statCard, { backgroundColor: color + '20' }]}>
-    <Icon color={color} size={28} />
-    <Text style={[styles.statValue, { color }]}>{value}</Text>
+const StatCard = ({ icon: Icon, value, label, color, gradient }) => (
+  <View style={[styles.statCard, { backgroundColor: gradient[0] }]}>
+    <View style={[styles.statIconContainer, { backgroundColor: gradient[1] }]}>
+      <Icon color="#fff" size={24} />
+    </View>
+    <Text style={styles.statValue}>{value}</Text>
     <Text style={styles.statLabel}>{label}</Text>
   </View>
+);
+
+const QuickActionCard = ({ icon: Icon, title, subtitle, onPress, color }) => (
+  <TouchableOpacity style={[styles.quickActionCard, { borderLeftColor: color }]} onPress={onPress}>
+    <View style={styles.quickActionContent}>
+      <View style={[styles.quickActionIcon, { backgroundColor: color + '20' }]}>
+        <Icon color={color} size={20} />
+      </View>
+      <View style={styles.quickActionText}>
+        <Text style={styles.quickActionTitle}>{title}</Text>
+        <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
+      </View>
+    </View>
+  </TouchableOpacity>
 );
 
 const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
@@ -33,137 +51,342 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
         .filter(a => new Date(a.appointment_date) >= new Date())
         .sort((a, b) => new Date(a.appointment_date) - new Date(b.appointment_date))[0];
 
+    // Get pain level color
+    const getPainColor = (painLevel) => {
+        if (painLevel <= 3) return '#10B981'; // Green
+        if (painLevel <= 6) return '#F59E0B'; // Yellow
+        return '#EF4444'; // Red
+    };
+
+    const painColor = getPainColor(patient.pain_scale);
+
     return (
-        <ScrollView contentContainerStyle={styles.screenContainer}>
-            <Text style={styles.welcomeTitle}>Welcome, {patient.patient_name || 'User'}!</Text>
+        <ScrollView 
+            contentContainerStyle={styles.screenContainer}
+            showsVerticalScrollIndicator={false}
+        >
+            {/* Welcome Header */}
+            <View style={styles.welcomeHeader}>
+                <Text style={styles.welcomeTitle}>Welcome back,</Text>
+                <Text style={styles.welcomeName}>{patient.patient_name?.split(' ')[0] || 'User'}! 👋</Text>
+                <Text style={styles.welcomeSubtitle}>How are you feeling today?</Text>
+            </View>
             
-            <View style={styles.card}>
-                <Text style={styles.cardTitle}>Next Appointment</Text>
+            {/* Next Appointment Card */}
+            <View style={styles.appointmentCard}>
+                <View style={styles.appointmentHeader}>
+                    <View style={styles.appointmentIconContainer}>
+                        <Clock color="#6D28D9" size={20} />
+                    </View>
+                    <Text style={styles.appointmentCardTitle}>Next Appointment</Text>
+                </View>
                 {nextAppointment ? (
-                    <>
+                    <View style={styles.appointmentDetails}>
                         <Text style={styles.appointmentTime}>{formatDateTime(nextAppointment.appointment_date)}</Text>
-                        <Text style={styles.appointmentDoctor}>with {nextAppointment.doctor_name}</Text>
-                    </>
+                        <Text style={styles.appointmentDoctor}>Dr. {nextAppointment.doctor_name}</Text>
+                        <View style={styles.appointmentBadge}>
+                            <Text style={styles.appointmentBadgeText}>{nextAppointment.consultation_type}</Text>
+                        </View>
+                    </View>
                 ) : (
-                    <Text style={styles.appointmentDoctor}>No upcoming appointments.</Text>
+                    <View style={styles.noAppointmentContainer}>
+                        <Text style={styles.noAppointmentText}>No upcoming appointments</Text>
+                        <TouchableOpacity style={styles.scheduleButton} onPress={onBookAppointment}>
+                            <Text style={styles.scheduleButtonText}>Schedule Now</Text>
+                        </TouchableOpacity>
+                    </View>
                 )}
             </View>
 
+            {/* Health Stats Grid */}
             <View style={styles.statsGrid}>
-                {/* --- MODIFIED: Color changed from red to green --- */}
-                <StatCard icon={Award} value={`${patient.pain_scale}/10`} label="Pain Score" color="#10B981" />
-                <StatCard icon={Calendar} value={patient.appointments.length} label="Appointments" color="#3B82F6" />
+                <StatCard 
+                    icon={Heart} 
+                    value={`${patient.pain_scale}/10`} 
+                    label="Pain Level" 
+                    color={painColor}
+                    gradient={[painColor + '15', painColor]}
+                />
+                <StatCard 
+                    icon={Calendar} 
+                    value={patient.appointments.length} 
+                    label="Total Visits" 
+                    color="#3B82F6"
+                    gradient={['#DBEAFE', '#3B82F6']}
+                />
+                <StatCard 
+                    icon={Activity} 
+                    value="85%" 
+                    label="Recovery" 
+                    color="#8B5CF6"
+                    gradient={['#EDE9FE', '#8B5CF6']}
+                />
+                <StatCard 
+                    icon={TrendingUp} 
+                    value="+12%" 
+                    label="Progress" 
+                    color="#10B981"
+                    gradient={['#D1FAE5', '#10B981']}
+                />
             </View>
 
-            <TouchableOpacity style={styles.primaryButton} onPress={onBookAppointment}>
-                <Plus color="#fff" size={20} style={{ marginRight: 10 }}/>
-                <Text style={styles.primaryButtonText}>Book New Appointment</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.primaryButton, { marginTop: 10 }]} onPress={onViewReports}>
-                <FileText color="#fff" size={18} style={{ marginRight: 10 }}/>
-                <Text style={styles.primaryButtonText}>View Full Report</Text>
-            </TouchableOpacity>
+            {/* Quick Actions */}
+            <View style={styles.quickActionsContainer}>
+                <Text style={styles.sectionTitle}>Quick Actions</Text>
+                <QuickActionCard
+                    icon={Plus}
+                    title="Book Appointment"
+                    subtitle="Schedule your next visit"
+                    onPress={onBookAppointment}
+                    color="#6D28D9"
+                />
+                <QuickActionCard
+                    icon={FileText}
+                    title="View Reports"
+                    subtitle="Access your medical records"
+                    onPress={onViewReports}
+                    color="#3B82F6"
+                />
+            </View>
             
-            <Text style={styles.sectionTitle}>Health Tip of the Day</Text>
-            <View style={styles.tipCard}>
-                <Lightbulb color="#92400E" size={24} style={styles.tipIcon} />
-                <Text style={styles.tipText}>Remember to stay hydrated! Drinking enough water is crucial for muscle recovery and overall joint health.</Text>
+            {/* Health Tip */}
+            <View style={styles.tipContainer}>
+                <Text style={styles.sectionTitle}>Daily Health Tip</Text>
+                <View style={styles.tipCard}>
+                    <View style={styles.tipIconContainer}>
+                        <Lightbulb color="#F59E0B" size={24} />
+                    </View>
+                    <View style={styles.tipContent}>
+                        <Text style={styles.tipTitle}>Stay Hydrated</Text>
+                        <Text style={styles.tipText}>Drinking 8-10 glasses of water daily helps with muscle recovery and joint health. Keep a water bottle nearby!</Text>
+                    </View>
+                </View>
             </View>
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
-  screenContainer: { 
-    padding: 20,
-  },
-  welcomeTitle: { 
-    fontSize: 26, 
-    fontWeight: 'bold', 
-    color: '#111827', 
-    marginBottom: 20
-  },
-  card: { 
-    backgroundColor: '#fff', 
-    borderRadius: 16, 
-    padding: 20, 
-    shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 2 }, 
-    shadowOpacity: 0.05, 
-    shadowRadius: 4, 
-    elevation: 3 
-  },
-  appointmentTime: { 
-    fontSize: 22, 
-    fontWeight: 'bold', 
-    color: '#1F2937', 
-    marginVertical: 5 
-  },
-  appointmentDoctor: { 
-    fontSize: 14, 
-    color: '#4B5563' 
-  },
-  statsGrid: { 
-    flexDirection: 'row', 
-    justifyContent: 'space-between', 
-    marginTop: 20,
-  },
-  statCard: { 
-    flex: 1,
-    borderRadius: 12, 
-    padding: 15, 
-    alignItems: 'center', 
-    marginHorizontal: 5,
-  },
-  statValue: { 
-    fontSize: 22, 
-    fontWeight: 'bold', 
-    marginTop: 8 
-  },
-  statLabel: { 
-    fontSize: 12, 
-    color: '#4B5563', 
-    marginTop: 2 
-  },
-  primaryButton: {
-    flexDirection: 'row',
-    backgroundColor: '#6D28D9',
-    borderRadius: 12,
-    paddingVertical: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginTop: 25,
-    marginBottom: 10,
-  },
-  tipCard: {
-    backgroundColor: '#FEF3C7',
-    borderRadius: 12,
-    padding: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  tipIcon: {
-    marginRight: 15,
-  },
-  tipText: {
-    color: '#92400E',
-    fontSize: 14,
-    flex: 1,
-    lineHeight: 20,
-  }
+    screenContainer: { 
+        padding: 20,
+        paddingBottom: 100,
+    },
+    welcomeHeader: {
+        marginBottom: 25,
+    },
+    welcomeTitle: { 
+        fontSize: 16, 
+        color: '#6B7280',
+        fontWeight: '500',
+    },
+    welcomeName: { 
+        fontSize: 28, 
+        fontWeight: 'bold', 
+        color: '#111827', 
+        marginTop: 2,
+    },
+    welcomeSubtitle: {
+        fontSize: 14,
+        color: '#9CA3AF',
+        marginTop: 4,
+    },
+    appointmentCard: { 
+        backgroundColor: '#fff', 
+        borderRadius: 20, 
+        padding: 20, 
+        marginBottom: 25,
+        shadowColor: '#6D28D9', 
+        shadowOffset: { width: 0, height: 4 }, 
+        shadowOpacity: 0.1, 
+        shadowRadius: 12, 
+        elevation: 8,
+        borderWidth: 1,
+        borderColor: '#F3F4F6',
+    },
+    appointmentHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 15,
+    },
+    appointmentIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#EDE9FE',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    appointmentCardTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#374151',
+    },
+    appointmentDetails: {
+        paddingLeft: 48,
+    },
+    appointmentTime: { 
+        fontSize: 20, 
+        fontWeight: 'bold', 
+        color: '#111827', 
+        marginBottom: 4,
+    },
+    appointmentDoctor: { 
+        fontSize: 14, 
+        color: '#6B7280',
+        marginBottom: 8,
+    },
+    appointmentBadge: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#EDE9FE',
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+        borderRadius: 12,
+    },
+    appointmentBadgeText: {
+        fontSize: 12,
+        color: '#6D28D9',
+        fontWeight: '600',
+    },
+    noAppointmentContainer: {
+        paddingLeft: 48,
+        alignItems: 'flex-start',
+    },
+    noAppointmentText: {
+        fontSize: 14,
+        color: '#6B7280',
+        marginBottom: 12,
+    },
+    scheduleButton: {
+        backgroundColor: '#6D28D9',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 12,
+    },
+    scheduleButtonText: {
+        color: '#fff',
+        fontSize: 12,
+        fontWeight: '600',
+    },
+    statsGrid: { 
+        flexDirection: 'row', 
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
+        marginBottom: 25,
+    },
+    statCard: { 
+        width: (width - 60) / 2,
+        borderRadius: 16, 
+        padding: 16, 
+        alignItems: 'center', 
+        marginBottom: 15,
+        shadowColor: '#000', 
+        shadowOffset: { width: 0, height: 2 }, 
+        shadowOpacity: 0.05, 
+        shadowRadius: 8, 
+        elevation: 3,
+    },
+    statIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
+    statValue: { 
+        fontSize: 20, 
+        fontWeight: 'bold', 
+        color: '#111827',
+        marginBottom: 2,
+    },
+    statLabel: { 
+        fontSize: 12, 
+        color: '#6B7280', 
+        fontWeight: '500',
+        textAlign: 'center',
+    },
+    quickActionsContainer: {
+        marginBottom: 25,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#111827',
+        marginBottom: 15,
+    },
+    quickActionCard: {
+        backgroundColor: '#fff',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        borderLeftWidth: 4,
+        shadowColor: '#000', 
+        shadowOffset: { width: 0, height: 2 }, 
+        shadowOpacity: 0.05, 
+        shadowRadius: 8, 
+        elevation: 3,
+    },
+    quickActionContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    quickActionIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+    },
+    quickActionText: {
+        flex: 1,
+    },
+    quickActionTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#111827',
+        marginBottom: 2,
+    },
+    quickActionSubtitle: {
+        fontSize: 13,
+        color: '#6B7280',
+    },
+    tipContainer: {
+        marginBottom: 20,
+    },
+    tipCard: {
+        backgroundColor: '#FFFBEB',
+        borderRadius: 16,
+        padding: 20,
+        flexDirection: 'row',
+        borderWidth: 1,
+        borderColor: '#FEF3C7',
+    },
+    tipIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#FEF3C7',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 15,
+    },
+    tipContent: {
+        flex: 1,
+    },
+    tipTitle: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#92400E',
+        marginBottom: 4,
+    },
+    tipText: {
+        color: '#92400E',
+        fontSize: 13,
+        lineHeight: 18,
+        opacity: 0.8,
+    },
 });
 
 export default DashboardScreen;
-

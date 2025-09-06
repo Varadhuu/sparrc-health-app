@@ -4,12 +4,27 @@ export const API_BASE_URL = 'http://10.0.2.2:3001';
 
 export const fetchPatientData = async (patientId) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/patient/${patientId}`);
+        // Add timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        const response = await fetch(`${API_BASE_URL}/api/patient/${patientId}`, {
+            signal: controller.signal,
+            headers: {
+                'Cache-Control': 'no-cache',
+            }
+        });
+        
+        clearTimeout(timeoutId);
+        
         if (!response.ok) {
             throw new Error(`Network response was not ok. Status: ${response.status}`);
         }
         return await response.json();
     } catch (error) {
+        if (error.name === 'AbortError') {
+            throw new Error('Request timed out. Please check your connection.');
+        }
         console.error('FETCH ERROR:', error);
         throw error;
     }

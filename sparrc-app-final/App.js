@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, Text, Alert, ScrollView, RefreshControl } from 'react-native';
+import { StyleSheet, SafeAreaView, StatusBar, View, ActivityIndicator, Text, Alert, ScrollView, RefreshControl, InteractionManager } from 'react-native';
 
 import { fetchPatientData, updatePatientData } from './src/api';
 import Header from './src/components/Header';
@@ -23,6 +23,8 @@ export default function App() {
 
     const loadData = async () => {
         try {
+            // Use InteractionManager to defer data loading until after animations
+            await new Promise(resolve => InteractionManager.runAfterInteractions(resolve));
             const data = await fetchPatientData(1);
             setPatientData(data);
         } catch (error) {
@@ -37,8 +39,11 @@ export default function App() {
     };
     
     useEffect(() => {
-        if (appStatus === 'loaded' && !patientData) {
-            loadData();
+        if (appStatus === 'loaded') {
+            // Start loading data immediately when splash finishes
+            if (!patientData) {
+                loadData();
+            }
         }
     }, [appStatus, patientData]);
 

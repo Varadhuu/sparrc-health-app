@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Animated } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
 import { Award, Calendar, Plus, FileText, Lightbulb, Activity, Heart, TrendingUp, Clock } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
@@ -17,229 +17,29 @@ const formatDateTime = (isoString) => {
     });
 };
 
-const StatCard = ({ icon: Icon, value, label, color }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const shadowAnim = useRef(new Animated.Value(3)).current;
+const StatCard = ({ icon: Icon, value, label, color, gradient }) => (
+  <View style={[styles.statCard, { backgroundColor: gradient[0] }]}>
+    <View style={[styles.statIconContainer, { backgroundColor: gradient[1] }]}>
+      <Icon color="#fff" size={24} />
+    </View>
+    <Text style={styles.statValue}>{value}</Text>
+    <Text style={styles.statLabel}>{label}</Text>
+  </View>
+);
 
-  const handlePressIn = () => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 0.95,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 10,
-      }),
-      Animated.timing(shadowAnim, {
-        toValue: 8,
-        duration: 150,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 10,
-      }),
-      Animated.timing(shadowAnim, {
-        toValue: 3,
-        duration: 150,
-        useNativeDriver: false,
-      }),
-    ]).start();
-  };
-
-  return (
-    <TouchableOpacity
-      activeOpacity={1}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-    >
-      <Animated.View 
-        style={[
-          styles.statCard, 
-          {
-            transform: [{ scale: scaleAnim }],
-            elevation: shadowAnim,
-            shadowOpacity: shadowAnim.interpolate({
-              inputRange: [3, 8],
-              outputRange: [0.05, 0.15],
-            }),
-          }
-        ]}
-      >
-        <View style={[styles.statIconContainer, { backgroundColor: color }]}>
-          <Icon color="#fff" size={24} />
-        </View>
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statLabel}>{label}</Text>
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
-
-const QuickActionCard = ({ icon: Icon, title, subtitle, onPress, color }) => {
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-  const translateXAnim = useRef(new Animated.Value(0)).current;
-
-  const handlePressIn = () => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 0.98,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 10,
-      }),
-      Animated.timing(translateXAnim, {
-        toValue: 5,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.parallel([
-      Animated.spring(scaleAnim, {
-        toValue: 1,
-        useNativeDriver: true,
-        tension: 300,
-        friction: 10,
-      }),
-      Animated.timing(translateXAnim, {
-        toValue: 0,
-        duration: 150,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  return (
-    <TouchableOpacity 
-      style={[styles.quickActionCard, { borderLeftColor: color }]} 
-      onPress={onPress}
-      activeOpacity={1}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-    >
-      <Animated.View 
-        style={[
-          styles.quickActionContent,
-          {
-            transform: [
-              { scale: scaleAnim },
-              { translateX: translateXAnim }
-            ],
-          }
-        ]}
-      >
-        <View style={[styles.quickActionIcon, { backgroundColor: color + '20' }]}>
-          <Icon color={color} size={20} />
-        </View>
-        <View style={styles.quickActionText}>
-          <Text style={styles.quickActionTitle}>{title}</Text>
-          <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
-        </View>
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
-
-const AppointmentCard = ({ nextAppointment, onBookAppointment }) => {
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const scaleAnim = useRef(new Animated.Value(1)).current;
-
-  React.useEffect(() => {
-    if (nextAppointment) {
-      // Subtle pulse animation for upcoming appointments
-      const pulseAnimation = Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulseAnim, {
-            toValue: 1.02,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-          Animated.timing(pulseAnim, {
-            toValue: 1,
-            duration: 2000,
-            useNativeDriver: true,
-          }),
-        ])
-      );
-      pulseAnimation.start();
-      return () => pulseAnimation.stop();
-    }
-  }, [nextAppointment]);
-
-  const handlePressIn = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 0.98,
-      useNativeDriver: true,
-      tension: 300,
-      friction: 10,
-    }).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.spring(scaleAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-      tension: 300,
-      friction: 10,
-    }).start();
-  };
-
-  return (
-    <TouchableOpacity
-      activeOpacity={1}
-      onPressIn={handlePressIn}
-      onPressOut={handlePressOut}
-    >
-      <Animated.View 
-        style={[
-          styles.appointmentCard,
-          {
-            transform: [
-              { scale: Animated.multiply(pulseAnim, scaleAnim) }
-            ],
-          }
-        ]}
-      >
-        <View style={styles.appointmentHeader}>
-          <View style={styles.appointmentIconContainer}>
-            <Clock color="#6D28D9" size={20} />
-          </View>
-          <Text style={styles.appointmentCardTitle}>Next Appointment</Text>
-        </View>
-        {nextAppointment ? (
-          <View style={styles.appointmentDetails}>
-            <View style={styles.appointmentMainInfo}>
-              <Text style={styles.appointmentTime}>{formatDateTime(nextAppointment.appointment_date)}</Text>
-              <Text style={styles.appointmentDoctor}>with {nextAppointment.doctor_name}</Text>
-            </View>
-            <View style={styles.appointmentMetaInfo}>
-              <View style={styles.appointmentBadge}>
-                <Text style={styles.appointmentBadgeText}>{nextAppointment.consultation_type}</Text>
-              </View>
-              <Text style={styles.appointmentLocation}>{nextAppointment.branch}</Text>
-            </View>
-          </View>
-        ) : (
-          <View style={styles.noAppointmentContainer}>
-            <Text style={styles.noAppointmentText}>No upcoming appointments</Text>
-            <TouchableOpacity style={styles.scheduleButton} onPress={onBookAppointment}>
-              <Text style={styles.scheduleButtonText}>Schedule Now</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
+const QuickActionCard = ({ icon: Icon, title, subtitle, onPress, color }) => (
+  <TouchableOpacity style={[styles.quickActionCard, { borderLeftColor: color }]} onPress={onPress}>
+    <View style={styles.quickActionContent}>
+      <View style={[styles.quickActionIcon, { backgroundColor: color + '20' }]}>
+        <Icon color={color} size={20} />
+      </View>
+      <View style={styles.quickActionText}>
+        <Text style={styles.quickActionTitle}>{title}</Text>
+        <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
+      </View>
+    </View>
+  </TouchableOpacity>
+);
 
 const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
     if (!patient || !patient.appointments) {
@@ -250,6 +50,15 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
     const nextAppointment = patient.appointments
         .filter(a => new Date(a.appointment_date) >= new Date())
         .sort((a, b) => new Date(a.appointment_date) - new Date(b.appointment_date))[0];
+
+    // Get pain level color
+    const getPainColor = (painLevel) => {
+        if (painLevel <= 3) return '#10B981'; // Green
+        if (painLevel <= 6) return '#F59E0B'; // Yellow
+        return '#EF4444'; // Red
+    };
+
+    const painColor = getPainColor(patient.pain_scale);
 
     return (
         <ScrollView 
@@ -264,10 +73,30 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
             </View>
             
             {/* Next Appointment Card */}
-            <AppointmentCard 
-                nextAppointment={nextAppointment} 
-                onBookAppointment={onBookAppointment} 
-            />
+            <View style={styles.appointmentCard}>
+                <View style={styles.appointmentHeader}>
+                    <View style={styles.appointmentIconContainer}>
+                        <Clock color="#6D28D9" size={20} />
+                    </View>
+                    <Text style={styles.appointmentCardTitle}>Next Appointment</Text>
+                </View>
+                {nextAppointment ? (
+                    <View style={styles.appointmentDetails}>
+                        <Text style={styles.appointmentTime}>{formatDateTime(nextAppointment.appointment_date)}</Text>
+                        <Text style={styles.appointmentDoctor}>Dr. {nextAppointment.doctor_name}</Text>
+                        <View style={styles.appointmentBadge}>
+                            <Text style={styles.appointmentBadgeText}>{nextAppointment.consultation_type}</Text>
+                        </View>
+                    </View>
+                ) : (
+                    <View style={styles.noAppointmentContainer}>
+                        <Text style={styles.noAppointmentText}>No upcoming appointments</Text>
+                        <TouchableOpacity style={styles.scheduleButton} onPress={onBookAppointment}>
+                            <Text style={styles.scheduleButtonText}>Schedule Now</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+            </View>
 
             {/* Health Stats Grid */}
             <View style={styles.statsGrid}>
@@ -275,25 +104,29 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
                     icon={Heart} 
                     value={`${patient.pain_scale}/10`} 
                     label="Pain Level" 
-                    color="#EF4444"
+                    color={painColor}
+                    gradient={[painColor + '15', painColor]}
                 />
                 <StatCard 
                     icon={Calendar} 
                     value={patient.appointments.length} 
                     label="Total Visits" 
                     color="#3B82F6"
+                    gradient={['#DBEAFE', '#3B82F6']}
                 />
                 <StatCard 
                     icon={Activity} 
                     value="85%" 
                     label="Recovery" 
                     color="#8B5CF6"
+                    gradient={['#EDE9FE', '#8B5CF6']}
                 />
                 <StatCard 
                     icon={TrendingUp} 
                     value="+12%" 
                     label="Progress" 
                     color="#10B981"
+                    gradient={['#D1FAE5', '#10B981']}
                 />
             </View>
 
@@ -390,31 +223,24 @@ const styles = StyleSheet.create({
         color: '#374151',
     },
     appointmentDetails: {
-        marginTop: 8,
-    },
-    appointmentMainInfo: {
-        marginBottom: 12,
+        paddingLeft: 48,
     },
     appointmentTime: { 
-        fontSize: 18, 
+        fontSize: 20, 
         fontWeight: 'bold', 
         color: '#111827', 
-        marginBottom: 6,
+        marginBottom: 4,
     },
     appointmentDoctor: { 
-        fontSize: 15, 
+        fontSize: 14, 
         color: '#6B7280',
-        fontWeight: '500',
-    },
-    appointmentMetaInfo: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        marginBottom: 8,
     },
     appointmentBadge: {
+        alignSelf: 'flex-start',
         backgroundColor: '#EDE9FE',
         paddingHorizontal: 12,
-        paddingVertical: 6,
+        paddingVertical: 4,
         borderRadius: 12,
     },
     appointmentBadgeText: {
@@ -422,16 +248,8 @@ const styles = StyleSheet.create({
         color: '#6D28D9',
         fontWeight: '600',
     },
-    appointmentLocation: {
-        fontSize: 13,
-        color: '#9CA3AF',
-        fontWeight: '500',
-        flex: 1,
-        textAlign: 'right',
-        marginLeft: 12,
-    },
     noAppointmentContainer: {
-        marginTop: 8,
+        paddingLeft: 48,
         alignItems: 'flex-start',
     },
     noAppointmentText: {
@@ -458,7 +276,6 @@ const styles = StyleSheet.create({
     },
     statCard: { 
         width: (width - 60) / 2,
-        backgroundColor: '#fff',
         borderRadius: 16, 
         padding: 16, 
         alignItems: 'center', 
@@ -501,6 +318,7 @@ const styles = StyleSheet.create({
     quickActionCard: {
         backgroundColor: '#fff',
         borderRadius: 16,
+        padding: 16,
         marginBottom: 12,
         borderLeftWidth: 4,
         shadowColor: '#000', 
@@ -512,7 +330,6 @@ const styles = StyleSheet.create({
     quickActionContent: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
     },
     quickActionIcon: {
         width: 40,

@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions } from 'react-native';
+import React, { useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Dimensions, Animated } from 'react-native';
 import { Award, Calendar, Plus, FileText, Lightbulb, Activity, Heart, TrendingUp, Clock } from 'lucide-react-native';
 
 const { width } = Dimensions.get('window');
@@ -17,29 +17,230 @@ const formatDateTime = (isoString) => {
     });
 };
 
-const StatCard = ({ icon: Icon, value, label, color, gradient }) => (
-  <View style={styles.statCard}>
-    <View style={[styles.statIconContainer, { backgroundColor: color }]}>
-      <Icon color="#fff" size={24} />
-    </View>
-    <Text style={styles.statValue}>{value}</Text>
-    <Text style={styles.statLabel}>{label}</Text>
-  </View>
-);
+const StatCard = ({ icon: Icon, value, label, color }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const shadowAnim = useRef(new Animated.Value(3)).current;
 
-const QuickActionCard = ({ icon: Icon, title, subtitle, onPress, color }) => (
-  <TouchableOpacity style={[styles.quickActionCard, { borderLeftColor: color }]} onPress={onPress}>
-    <View style={styles.quickActionContent}>
-      <View style={[styles.quickActionIcon, { backgroundColor: color + '20' }]}>
-        <Icon color={color} size={20} />
-      </View>
-      <View style={styles.quickActionText}>
-        <Text style={styles.quickActionTitle}>{title}</Text>
-        <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
-      </View>
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 0.95,
+        useNativeDriver: true,
+        tension: 300,
+        friction: 10,
+      }),
+      Animated.timing(shadowAnim, {
+        toValue: 8,
+        duration: 150,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 300,
+        friction: 10,
+      }),
+      Animated.timing(shadowAnim, {
+        toValue: 3,
+        duration: 150,
+        useNativeDriver: false,
+      }),
+    ]).start();
+  };
+
+  return (
+    <TouchableOpacity
+      activeOpacity={1}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
+      <Animated.View 
+        style={[
+          styles.statCard, 
+          {
+            transform: [{ scale: scaleAnim }],
+            elevation: shadowAnim,
+            shadowOpacity: shadowAnim.interpolate({
+              inputRange: [3, 8],
+              outputRange: [0.05, 0.15],
+            }),
+          }
+        ]}
+      >
+        <View style={[styles.statIconContainer, { backgroundColor: color }]}>
+          <Icon color="#fff" size={24} />
+        </View>
+        <Text style={styles.statValue}>{value}</Text>
+        <Text style={styles.statLabel}>{label}</Text>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
+const QuickActionCard = ({ icon: Icon, title, subtitle, onPress, color }) => {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const translateXAnim = useRef(new Animated.Value(0)).current;
+
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 0.98,
+        useNativeDriver: true,
+        tension: 300,
+        friction: 10,
+      }),
+      Animated.timing(translateXAnim, {
+        toValue: 5,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 300,
+        friction: 10,
+      }),
+      Animated.timing(translateXAnim, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  return (
+    <TouchableOpacity 
+      style={[styles.quickActionCard, { borderLeftColor: color }]} 
+      onPress={onPress}
+      activeOpacity={1}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
+      <Animated.View 
+        style={[
+          styles.quickActionContent,
+          {
+            transform: [
+              { scale: scaleAnim },
+              { translateX: translateXAnim }
+            ],
+          }
+        ]}
+      >
+        <View style={[styles.quickActionIcon, { backgroundColor: color + '20' }]}>
+          <Icon color={color} size={20} />
+        </View>
+        <View style={styles.quickActionText}>
+          <Text style={styles.quickActionTitle}>{title}</Text>
+          <Text style={styles.quickActionSubtitle}>{subtitle}</Text>
+        </View>
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
+const AppointmentCard = ({ nextAppointment, onBookAppointment }) => {
+  const pulseAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  React.useEffect(() => {
+    if (nextAppointment) {
+      // Subtle pulse animation for upcoming appointments
+      const pulseAnimation = Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseAnim, {
+            toValue: 1.02,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseAnim, {
+            toValue: 1,
+            duration: 2000,
+            useNativeDriver: true,
+          }),
+        ])
+      );
+      pulseAnimation.start();
+      return () => pulseAnimation.stop();
     </View>
-  </TouchableOpacity>
-);
+  }, [nextAppointment]);
+
+  const handlePressIn = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 0.98,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 10,
+    }).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      tension: 300,
+      friction: 10,
+    }).start();
+  };
+
+  return (
+    <TouchableOpacity
+      activeOpacity={1}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
+    >
+      <Animated.View 
+        style={[
+          styles.appointmentCard,
+          {
+            transform: [
+              { scale: Animated.multiply(pulseAnim, scaleAnim) }
+            ],
+          }
+        ]}
+      >
+        <View style={styles.appointmentHeader}>
+          <View style={styles.appointmentIconContainer}>
+            <Clock color="#6D28D9" size={20} />
+          </View>
+          <Text style={styles.appointmentCardTitle}>Next Appointment</Text>
+        </View>
+        {nextAppointment ? (
+          <View style={styles.appointmentDetails}>
+            <View style={styles.appointmentMainInfo}>
+              <Text style={styles.appointmentTime}>{formatDateTime(nextAppointment.appointment_date)}</Text>
+              <Text style={styles.appointmentDoctor}>with Dr. {nextAppointment.doctor_name}</Text>
+            </View>
+            <View style={styles.appointmentMetaInfo}>
+              <View style={styles.appointmentBadge}>
+                <Text style={styles.appointmentBadgeText}>{nextAppointment.consultation_type}</Text>
+              </View>
+              <Text style={styles.appointmentLocation}>{nextAppointment.branch}</Text>
+            </View>
+          </View>
+        ) : (
+          <View style={styles.noAppointmentContainer}>
+            <Text style={styles.noAppointmentText}>No upcoming appointments</Text>
+            <TouchableOpacity style={styles.scheduleButton} onPress={onBookAppointment}>
+              <Text style={styles.scheduleButtonText}>Schedule Now</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </Animated.View>
+    </TouchableOpacity>
+  );
+};
+
 
 const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
     if (!patient || !patient.appointments) {
@@ -73,35 +274,10 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
             </View>
             
             {/* Next Appointment Card */}
-            <View style={styles.appointmentCard}>
-                <View style={styles.appointmentHeader}>
-                    <View style={styles.appointmentIconContainer}>
-                        <Clock color="#6D28D9" size={20} />
-                    </View>
-                    <Text style={styles.appointmentCardTitle}>Next Appointment</Text>
-                </View>
-                {nextAppointment ? (
-                    <View style={styles.appointmentDetails}>
-                        <View style={styles.appointmentMainInfo}>
-                            <Text style={styles.appointmentTime}>{formatDateTime(nextAppointment.appointment_date)}</Text>
-                            <Text style={styles.appointmentDoctor}>with Dr. {nextAppointment.doctor_name}</Text>
-                        </View>
-                        <View style={styles.appointmentMetaInfo}>
-                            <View style={styles.appointmentBadge}>
-                                <Text style={styles.appointmentBadgeText}>{nextAppointment.consultation_type}</Text>
-                            </View>
-                            <Text style={styles.appointmentLocation}>{nextAppointment.branch}</Text>
-                        </View>
-                    </View>
-                ) : (
-                    <View style={styles.noAppointmentContainer}>
-                        <Text style={styles.noAppointmentText}>No upcoming appointments</Text>
-                        <TouchableOpacity style={styles.scheduleButton} onPress={onBookAppointment}>
-                            <Text style={styles.scheduleButtonText}>Schedule Now</Text>
-                        </TouchableOpacity>
-                    </View>
-                )}
-            </View>
+            <AppointmentCard 
+                nextAppointment={nextAppointment} 
+                onBookAppointment={onBookAppointment} 
+            />
 
             {/* Health Stats Grid */}
             <View style={styles.statsGrid}>
@@ -335,7 +511,6 @@ const styles = StyleSheet.create({
     quickActionCard: {
         backgroundColor: '#fff',
         borderRadius: 16,
-        padding: 16,
         marginBottom: 12,
         borderLeftWidth: 4,
         shadowColor: '#000', 
@@ -347,6 +522,7 @@ const styles = StyleSheet.create({
     quickActionContent: {
         flexDirection: 'row',
         alignItems: 'center',
+        padding: 16,
     },
     quickActionIcon: {
         width: 40,

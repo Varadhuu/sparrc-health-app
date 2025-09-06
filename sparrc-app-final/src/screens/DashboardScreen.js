@@ -18,8 +18,8 @@ const formatDateTime = (isoString) => {
 };
 
 const StatCard = ({ icon: Icon, value, label, color, gradient }) => (
-  <View style={[styles.statCard, { backgroundColor: gradient[0] }]}>
-    <View style={[styles.statIconContainer, { backgroundColor: gradient[1] }]}>
+  <View style={styles.statCard}>
+    <View style={[styles.statIconContainer, { backgroundColor: color }]}>
       <Icon color="#fff" size={24} />
     </View>
     <Text style={styles.statValue}>{value}</Text>
@@ -82,10 +82,15 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
                 </View>
                 {nextAppointment ? (
                     <View style={styles.appointmentDetails}>
-                        <Text style={styles.appointmentTime}>{formatDateTime(nextAppointment.appointment_date)}</Text>
-                        <Text style={styles.appointmentDoctor}>Dr. {nextAppointment.doctor_name}</Text>
-                        <View style={styles.appointmentBadge}>
-                            <Text style={styles.appointmentBadgeText}>{nextAppointment.consultation_type}</Text>
+                        <View style={styles.appointmentMainInfo}>
+                            <Text style={styles.appointmentTime}>{formatDateTime(nextAppointment.appointment_date)}</Text>
+                            <Text style={styles.appointmentDoctor}>with Dr. {nextAppointment.doctor_name}</Text>
+                        </View>
+                        <View style={styles.appointmentMetaInfo}>
+                            <View style={styles.appointmentBadge}>
+                                <Text style={styles.appointmentBadgeText}>{nextAppointment.consultation_type}</Text>
+                            </View>
+                            <Text style={styles.appointmentLocation}>{nextAppointment.branch}</Text>
                         </View>
                     </View>
                 ) : (
@@ -105,28 +110,24 @@ const DashboardScreen = ({ patient, onBookAppointment, onViewReports }) => {
                     value={`${patient.pain_scale}/10`} 
                     label="Pain Level" 
                     color={painColor}
-                    gradient={[painColor + '15', painColor]}
                 />
                 <StatCard 
                     icon={Calendar} 
                     value={patient.appointments.length} 
                     label="Total Visits" 
                     color="#3B82F6"
-                    gradient={['#DBEAFE', '#3B82F6']}
                 />
                 <StatCard 
                     icon={Activity} 
                     value="85%" 
                     label="Recovery" 
                     color="#8B5CF6"
-                    gradient={['#EDE9FE', '#8B5CF6']}
                 />
                 <StatCard 
                     icon={TrendingUp} 
                     value="+12%" 
                     label="Progress" 
                     color="#10B981"
-                    gradient={['#D1FAE5', '#10B981']}
                 />
             </View>
 
@@ -223,24 +224,31 @@ const styles = StyleSheet.create({
         color: '#374151',
     },
     appointmentDetails: {
-        paddingLeft: 48,
+        marginTop: 8,
+    },
+    appointmentMainInfo: {
+        marginBottom: 12,
     },
     appointmentTime: { 
-        fontSize: 20, 
+        fontSize: 18, 
         fontWeight: 'bold', 
         color: '#111827', 
-        marginBottom: 4,
+        marginBottom: 6,
     },
     appointmentDoctor: { 
-        fontSize: 14, 
+        fontSize: 15, 
         color: '#6B7280',
-        marginBottom: 8,
+        fontWeight: '500',
+    },
+    appointmentMetaInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
     },
     appointmentBadge: {
-        alignSelf: 'flex-start',
         backgroundColor: '#EDE9FE',
         paddingHorizontal: 12,
-        paddingVertical: 4,
+        paddingVertical: 6,
         borderRadius: 12,
     },
     appointmentBadgeText: {
@@ -248,8 +256,16 @@ const styles = StyleSheet.create({
         color: '#6D28D9',
         fontWeight: '600',
     },
+    appointmentLocation: {
+        fontSize: 13,
+        color: '#9CA3AF',
+        fontWeight: '500',
+        flex: 1,
+        textAlign: 'right',
+        marginLeft: 12,
+    },
     noAppointmentContainer: {
-        paddingLeft: 48,
+        marginTop: 8,
         alignItems: 'flex-start',
     },
     noAppointmentText: {
@@ -276,6 +292,7 @@ const styles = StyleSheet.create({
     },
     statCard: { 
         width: (width - 60) / 2,
+        backgroundColor: '#fff',
         borderRadius: 16, 
         padding: 16, 
         alignItems: 'center', 
